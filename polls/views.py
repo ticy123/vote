@@ -4,14 +4,30 @@ import xlwt as xlwt
 from django.http import JsonResponse, HttpRequest, HttpResponse
 # Create your views here.
 from django.shortcuts import render, redirect
+from rest_framework.generics import ListAPIView
+from rest_framework.viewsets import ModelViewSet
+
+from polls.mapper import SubjectMapper
 from polls.models import Subject, Teacher, User
+from polls.serializer import SubjectSerializer, TeacherSerializer
 from polls.utils import gen_random_code, gen_md5_digest
 from polls.validator import Captcha
-
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 def show_subjects(request):
+    queryset = Subject.objects.all().order_by('no')
+    subjects = []
+    for subject in queryset:
+        subjects.append(SubjectMapper(subject).as_dict())
+    return JsonResponse(subjects, safe=False)
+
+@api_view(('GET',))
+def show_subjects_v2(request):
     subjects = Subject.objects.all().order_by('no')
-    return  render(request,'subjects.html',{'subjects':subjects})
+    serializer = SubjectSerializer(subjects,many=True)
+    return Response(serializer.data)
+
 
 def show_teachers(request):
     try:
@@ -26,6 +42,19 @@ def show_teachers(request):
         })
     except (ValueError, Subject.DoesNotExist):
         return redirect('/')
+
+@api_view(('GET',))
+def show_teachers_v2(request):
+    try:
+        sno = int(request.GET.get('sno'))
+        subject = Subject.objects.only('name').get(no=sno)
+        teachers= Teacher.objects.filter(subject=subject).order_by('no')
+        subject_seri = SubjectSerializer(subject)
+        teachers_seri = TeacherSerializer(teachers,many=True)
+        return Response({'subject':subject_seri.data,'teachers':teachers_seri.data})
+    except(ValueError):
+        return Response(status=404)
+
 
 def praise_or_criticize(request):
     """好评"""
@@ -119,3 +148,13 @@ def get_teachers_data(request):
 
 def teacher_review(request):
     return  render(request,'teacherdata.html')
+
+
+class SubjectView(ListAPIView):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer
+
+
+class SubjectViewSet(ModelViewSet):
+    queryset = Subject.objects.all()
+    serializer_class = SubjectSerializer

@@ -4,52 +4,40 @@
     <meta charset="UTF-8">
     <title>学科信息</title>
     <style>
-        #container {
-            width: 80%;
-            margin: 10px auto;
-        }
-        .user {
-            float: right;
-            margin-right: 10px;
-        }
-        .user>a {
-            margin-right: 10px;
-        }
-        #main>dl>dt {
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-        #main>dl>dd {
-            font-size: 1.2em;
-        }
-        a {
-            text-decoration: none;
-            color: darkcyan;
-        }
+		/* 此处省略层叠样式表 */
     </style>
 </head>
 <body>
-{% include 'header.html' %}
     <div id="container">
-        <div class="user">
-            <a href="login.html">用户登录</a>
-            <a href="register.html">快速注册</a>
-        </div>
         <h1>扣丁学堂所有学科</h1>
         <hr>
         <div id="main">
-            {% for subject in subjects %}
-            <dl>
+            <dl v-for="subject in subjects">
                 <dt>
-                    <a href="/teachers/?sno={{ subject.no }}">{{ subject.name }}</a>
-                    {% if subject.is_hot %}
-                    <img src="/static/images/hot-icon-small.png">
-                    {% endif %}
+                    <a :href="'/static/html/teachers.html?sno=' + subject.no">
+                        {{ subject.name }}
+                    </a>
+                    <img v-if="subject.is_hot" src="/static/images/hot-icon-small.png">
                 </dt>
                 <dd>{{ subject.intro }}</dd>
             </dl>
-            {% endfor %}
         </div>
     </div>
+    <script src="https://cdn.bootcdn.net/ajax/libs/vue/2.6.11/vue.min.js"></script>
+    <script>
+        let app = new Vue({
+            el: '#main',
+            data: {
+                subjects: []
+            },
+            created() {
+                fetch('/api/subjects/')
+                    .then(resp => resp.json())
+                    .then(json => {
+                        this.subjects = json
+                    })
+            }
+        })
+    </script>
 </body>
 </html>

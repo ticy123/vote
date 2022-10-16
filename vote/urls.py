@@ -17,8 +17,7 @@ from django.conf import settings
 from django.contrib import admin
 from django.urls import path, include
 from polls import views
-
-
+from polls.views import SubjectViewSet, SubjectView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,7 +31,16 @@ urlpatterns = [
     path('excel/', views.export_teachers_excel),
     path('teachers_data/', views.get_teachers_data),
     path('teachers_view/', views.teacher_review),
+    path('api/subjects', views.show_subjects_v2),
+    path('api/teachers', views.show_teachers_v2),
+    path('api/class/subjects2', SubjectView.as_view())
 ]
+
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register('api/class/subjects', SubjectViewSet)
+urlpatterns += router.urls
 
 if settings.DEBUG:
 
